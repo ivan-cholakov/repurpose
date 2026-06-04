@@ -1,0 +1,39 @@
+// Prisma schema for Repurpose micro-SaaS
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  passwordHash         String
+  createdAt            DateTime @default(now())
+
+  // Billing
+  plan                 String   @default("free") // "free" | "pro"
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?
+  subscriptionStatus   String?  // active, trialing, past_due, canceled, etc.
+
+  // Usage metering (resets monthly)
+  usageCount           Int      @default(0)
+  usagePeriodStart     DateTime @default(now())
+
+  generations          Generation[]
+}
+
+model Generation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  formats   String   // comma-separated formats requested
+  sourceLen Int
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
