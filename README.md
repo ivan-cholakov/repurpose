@@ -78,11 +78,11 @@ stripe listen --forward-to localhost:3000/api/stripe/webhook
 
 ### 3. Deploy (recommended: Vercel)
 
-**One-click:** after pushing to GitHub, use this button (replace `YOUR_GH_USER/REPO`) — it
-prompts for every required env var on import:
+**One-click:** open this link — Vercel imports the repo and prompts for every required env
+var. (The repo is private, so you'll authorize Vercel's GitHub access on first use.)
 
 ```
-https://vercel.com/new/clone?repository-url=https://github.com/YOUR_GH_USER/REPO&env=DATABASE_URL,AUTH_SECRET,ANTHROPIC_API_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,STRIPE_PRICE_ID,NEXT_PUBLIC_APP_URL
+https://vercel.com/new/clone?repository-url=https://github.com/ivan-cholakov/repurpose&env=DATABASE_URL,AUTH_SECRET,ANTHROPIC_API_KEY,STRIPE_SECRET_KEY,STRIPE_WEBHOOK_SECRET,STRIPE_PRICE_ID,NEXT_PUBLIC_APP_URL
 ```
 
 Or manually:
