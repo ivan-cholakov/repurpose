@@ -45,15 +45,25 @@ export default async function Home() {
             Start free — no card needed
           </Link>
         </div>
-        <p className="mt-3 text-sm text-gray-500">{PLANS.free.monthlyLimit} free repurposes / month</p>
+        <p className="mt-3 text-sm text-gray-500">
+          {PLANS.free.monthlyLimit} free repurposes / month
+        </p>
       </section>
 
       {/* How it works */}
       <section className="mx-auto max-w-4xl px-6 py-12">
         <div className="grid gap-6 sm:grid-cols-3">
           {[
-            { n: "1", t: "Paste", d: "Drop in any long-form content — an article, a transcript, notes." },
-            { n: "2", t: "Pick formats", d: "Choose the channels you want: thread, LinkedIn, newsletter, TL;DR." },
+            {
+              n: "1",
+              t: "Paste",
+              d: "Drop in any long-form content — an article, a transcript, notes.",
+            },
+            {
+              n: "2",
+              t: "Pick formats",
+              d: "Choose the channels you want: thread, LinkedIn, newsletter, TL;DR.",
+            },
             { n: "3", t: "Ship", d: "Copy polished, on-message output and post it. That's it." },
           ].map((s) => (
             <div key={s.n} className="rounded-2xl border border-gray-200 p-6 dark:border-gray-800">
@@ -75,9 +85,9 @@ export default async function Home() {
             <h3 className="text-lg font-semibold">Free</h3>
             <p className="mt-2 text-4xl font-bold">€0</p>
             <ul className="mt-6 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <li>✓ {PLANS.free.monthlyLimit} repurposes / month</li>
-              <li>✓ All output formats</li>
-              <li>✓ Up to {PLANS.free.maxInputChars.toLocaleString()} characters per input</li>
+              <li>{PLANS.free.monthlyLimit} repurposes / month</li>
+              <li>All output formats</li>
+              <li>Up to {PLANS.free.maxInputChars.toLocaleString()} characters per input</li>
             </ul>
             <Link
               href="/signup"
@@ -97,10 +107,10 @@ export default async function Home() {
               €19<span className="text-base font-normal text-gray-500">/mo</span>
             </p>
             <ul className="mt-6 space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <li>✓ {PLANS.pro.monthlyLimit} repurposes / month</li>
-              <li>✓ All output formats</li>
-              <li>✓ Up to {PLANS.pro.maxInputChars.toLocaleString()} characters per input</li>
-              <li>✓ Priority generation</li>
+              <li>{PLANS.pro.monthlyLimit} repurposes / month</li>
+              <li>All output formats</li>
+              <li>Up to {PLANS.pro.maxInputChars.toLocaleString()} characters per input</li>
+              <li>Priority generation</li>
             </ul>
             <Link
               href="/signup"

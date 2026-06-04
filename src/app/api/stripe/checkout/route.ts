@@ -1,6 +1,9 @@
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
+import { env, requireEnv } from "@/lib/env";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 
 export async function POST() {
@@ -11,7 +14,7 @@ export async function POST() {
   if (!user) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
 
   const stripe = getStripe();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const appUrl = env.NEXT_PUBLIC_APP_URL;
 
   // Reuse or create a Stripe customer for this user.
   let customerId = user.stripeCustomerId;
@@ -21,13 +24,13 @@ export async function POST() {
       metadata: { userId: user.id },
     });
     customerId = customer.id;
-    await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
+    await db.update(users).set({ stripeCustomerId: customerId }).where(eq(users.id, user.id));
   }
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
-    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
+    line_items: [{ price: requireEnv("STRIPE_PRICE_ID"), quantity: 1 }],
     success_url: `${appUrl}/dashboard?upgraded=1`,
     cancel_url: `${appUrl}/dashboard`,
     allow_promotion_codes: true,

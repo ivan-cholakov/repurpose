@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { planFor, isUsageWindowExpired } from "@/lib/plans";
+import { isUsageWindowExpired, planFor } from "@/lib/plans";
 import { stripeConfigured } from "@/lib/stripe";
 import DashboardClient from "./dashboard-client";
 

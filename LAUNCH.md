@@ -1,4 +1,4 @@
-# Repurpose — Launch Kit 🚀
+# Repurpose — Launch Kit
 
 Everything below is **ready to copy-paste**. The product is built; this is the part that
 actually gets you to €1,000. Pricing is €19/mo, so:
@@ -30,14 +30,14 @@ tools quickly, and you can reach them for free by building in public yourself.
 > 1/ I kept writing good long-form posts and then... never turning them into tweets,
 > LinkedIn posts, or newsletter blurbs. The repurposing always died on my to-do list.
 >
-> So I built Repurpose. Paste once → get all of them in ~15 seconds. 🧵
+> So I built Repurpose. Paste once → get all of them in ~15 seconds.
 >
 > 2/ How it works:
 > • Paste a blog post, transcript, or rough draft
 > • Pick formats: X thread, LinkedIn, newsletter, TL;DR
 > • Get polished, on-voice versions you can ship immediately
 >
-> No "make it more engaging 🔥" slop. Faithful to what you actually said.
+> No "make it more engaging " slop. Faithful to what you actually said.
 >
 > 3/ It's powered by Claude, so the output is genuinely usable — not the generic AI
 > word-salad you're used to. I tuned each format with its own prompt (a thread reads like
@@ -47,7 +47,7 @@ tools quickly, and you can reach them for free by building in public yourself.
 >
 > If you publish anything and hate the repurposing grind, try it: [YOUR_URL]
 >
-> RTs appreciated 🙏 Happy to answer anything below.
+> RTs appreciated Happy to answer anything below.
 
 ---
 
@@ -66,7 +66,7 @@ tools quickly, and you can reach them for free by building in public yourself.
 > If you create content and the repurposing step keeps dying on your to-do list, I'd love
 > for you to try it: [YOUR_URL]
 >
-> What's the one piece of content you wish you'd repurposed but never did? 👇
+> What's the one piece of content you wish you'd repurposed but never did?
 
 ---
 
@@ -79,7 +79,7 @@ tools quickly, and you can reach them for free by building in public yourself.
 > Claude, tuned per-format, faithful to your voice. Free to start.
 
 **First comment (maker):**
-> Hey PH 👋 I built this because I kept writing things and never repurposing them. Every
+> Hey PH I built this because I kept writing things and never repurposing them. Every
 > format has its own tuned prompt so a thread actually reads like a thread. Free tier, no
 > card. Would love your feedback — especially on output quality.
 

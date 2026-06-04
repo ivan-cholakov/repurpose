@@ -1,16 +1,19 @@
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyPassword, createSession } from "@/lib/auth";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { createSession, verifyPassword } from "@/lib/auth";
+import { loginSchema, parseJson } from "@/lib/validation";
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json().catch(() => ({}));
-
-  if (typeof email !== "string" || typeof password !== "string") {
-    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  const parsed = await parseJson(req, loginSchema);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });
   }
-  const normalizedEmail = email.trim().toLowerCase();
+  const { email, password } = parsed.data;
 
-  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const user = rows[0];
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }

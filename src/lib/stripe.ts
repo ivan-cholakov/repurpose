@@ -1,17 +1,16 @@
 import Stripe from "stripe";
+import { env, requireEnv } from "@/lib/env";
 
 let _stripe: Stripe | null = null;
 
 // Lazily constructed so the app can build/run without keys until you go live.
 export function getStripe(): Stripe {
   if (_stripe) return _stripe;
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
   // Omit apiVersion to use the account default pinned in your Stripe dashboard.
-  _stripe = new Stripe(key);
+  _stripe = new Stripe(requireEnv("STRIPE_SECRET_KEY"));
   return _stripe;
 }
 
 export function stripeConfigured(): boolean {
-  return Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_PRICE_ID);
+  return Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID);
 }

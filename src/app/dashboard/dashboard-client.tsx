@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Client-safe list of formats (must match ids in src/lib/repurpose.ts).
 const FORMAT_OPTIONS = [
@@ -49,9 +49,7 @@ export default function DashboardClient(props: Props) {
   const remaining = Math.max(0, props.limit - used);
 
   function toggle(id: string) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   async function onGenerate() {
@@ -120,7 +118,11 @@ export default function DashboardClient(props: Props) {
             <span className="rounded-full border border-gray-300 px-2.5 py-0.5 text-xs font-medium dark:border-gray-700">
               {props.planName}
             </span>
-            <button onClick={logout} className="text-gray-500 hover:text-black dark:hover:text-white">
+            <button
+              type="button"
+              onClick={logout}
+              className="text-gray-500 hover:text-black dark:hover:text-white"
+            >
               Log out
             </button>
           </div>
@@ -130,7 +132,7 @@ export default function DashboardClient(props: Props) {
       <div className="mx-auto max-w-5xl px-6 py-8">
         {props.justUpgraded && (
           <div className="mb-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-            🎉 You&apos;re on Pro now. Thanks for the support!
+            You&apos;re on Pro now. Thanks for the support!
           </div>
         )}
 
@@ -142,6 +144,7 @@ export default function DashboardClient(props: Props) {
           </div>
           {props.planId === "free" ? (
             <button
+              type="button"
               onClick={() => startBilling("checkout")}
               disabled={busyBilling || !props.billingEnabled}
               title={props.billingEnabled ? "" : "Billing not configured yet"}
@@ -151,6 +154,7 @@ export default function DashboardClient(props: Props) {
             </button>
           ) : (
             <button
+              type="button"
               onClick={() => startBilling("portal")}
               disabled={busyBilling || !props.hasCustomer}
               className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-900"
@@ -164,7 +168,9 @@ export default function DashboardClient(props: Props) {
           {/* Input */}
           <div>
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium">Source content</label>
+              <label htmlFor="source-content" className="block text-sm font-medium">
+                Source content
+              </label>
               <button
                 type="button"
                 onClick={() => setSource(SAMPLE)}
@@ -174,6 +180,7 @@ export default function DashboardClient(props: Props) {
               </button>
             </div>
             <textarea
+              id="source-content"
               value={source}
               onChange={(e) => setSource(e.target.value)}
               maxLength={props.maxInputChars}
@@ -193,6 +200,7 @@ export default function DashboardClient(props: Props) {
                   return (
                     <button
                       key={f.id}
+                      type="button"
                       onClick={() => toggle(f.id)}
                       className={`rounded-full border px-3 py-1.5 text-sm transition ${
                         on
@@ -208,6 +216,7 @@ export default function DashboardClient(props: Props) {
             </div>
 
             <button
+              type="button"
               onClick={onGenerate}
               disabled={loading || remaining === 0}
               className="mt-5 w-full rounded-xl bg-black py-3 font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
@@ -256,13 +265,16 @@ function ResultCard({ result }: { result: Result }) {
       <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2 dark:border-gray-800">
         <span className="text-sm font-medium">{result.label}</span>
         <button
+          type="button"
           onClick={copy}
           className="text-xs font-medium text-gray-500 hover:text-black dark:hover:text-white"
         >
           {copied ? "Copied!" : "Copy"}
         </button>
       </div>
-      <pre className="whitespace-pre-wrap p-4 text-sm font-sans leading-relaxed">{result.content}</pre>
+      <pre className="whitespace-pre-wrap p-4 text-sm font-sans leading-relaxed">
+        {result.content}
+      </pre>
     </div>
   );
 }

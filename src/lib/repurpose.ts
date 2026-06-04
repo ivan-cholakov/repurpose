@@ -37,10 +37,7 @@ export interface RepurposeResult {
 
 const MODEL = "claude-sonnet-4-6";
 
-export async function repurpose(
-  source: string,
-  formats: FormatId[]
-): Promise<RepurposeResult[]> {
+export async function repurpose(source: string, formats: FormatId[]): Promise<RepurposeResult[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic({ apiKey });

@@ -1,8 +1,11 @@
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db";
+import { generations, users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { planFor, isUsageWindowExpired } from "@/lib/plans";
-import { repurpose, isValidFormat, type FormatId } from "@/lib/repurpose";
+import { isUsageWindowExpired, planFor } from "@/lib/plans";
+import { repurpose } from "@/lib/repurpose";
+import { parseJson, repurposeSchema } from "@/lib/validation";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -10,23 +13,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  const body = await req.json().catch(() => ({}));
-  const source: unknown = body.source;
-  const formatsRaw: unknown = body.formats;
-
-  if (typeof source !== "string" || source.trim().length < 50) {
-    return NextResponse.json(
-      { error: "Please paste at least 50 characters of source content." },
-      { status: 400 }
-    );
+  const parsed = await parseJson(req, repurposeSchema);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });
   }
-  if (!Array.isArray(formatsRaw) || formatsRaw.length === 0) {
-    return NextResponse.json({ error: "Select at least one output format." }, { status: 400 });
-  }
-  const formats = formatsRaw.filter((f): f is FormatId => typeof f === "string" && isValidFormat(f));
-  if (formats.length === 0) {
-    return NextResponse.json({ error: "No valid formats selected." }, { status: 400 });
-  }
+  const { source, formats } = parsed.data;
 
   const plan = planFor(user.plan);
 
@@ -35,7 +26,7 @@ export async function POST(req: Request) {
       {
         error: `Input is too long for the ${plan.name} plan (${source.length} / ${plan.maxInputChars} chars). Upgrade for longer inputs.`,
       },
-      { status: 413 }
+      { status: 413 },
     );
   }
 
@@ -43,10 +34,10 @@ export async function POST(req: Request) {
   let usageCount = user.usageCount;
   if (isUsageWindowExpired(user.usagePeriodStart)) {
     usageCount = 0;
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { usageCount: 0, usagePeriodStart: new Date() },
-    });
+    await db
+      .update(users)
+      .set({ usageCount: 0, usagePeriodStart: new Date() })
+      .where(eq(users.id, user.id));
   }
 
   if (usageCount >= plan.monthlyLimit) {
@@ -55,11 +46,11 @@ export async function POST(req: Request) {
         error: `You've hit your ${plan.name} limit of ${plan.monthlyLimit} repurposes this month.`,
         limitReached: true,
       },
-      { status: 402 }
+      { status: 402 },
     );
   }
 
-  let results;
+  let results: Awaited<ReturnType<typeof repurpose>>;
   try {
     results = await repurpose(source, formats);
   } catch (err) {
@@ -68,13 +59,15 @@ export async function POST(req: Request) {
   }
 
   // Count one repurpose per request (regardless of how many formats).
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: user.id },
-      data: { usageCount: { increment: 1 } },
-    }),
-    prisma.generation.create({
-      data: { userId: user.id, formats: formats.join(","), sourceLen: source.length },
+  await db.batch([
+    db
+      .update(users)
+      .set({ usageCount: sql`${users.usageCount} + 1` })
+      .where(eq(users.id, user.id)),
+    db.insert(generations).values({
+      userId: user.id,
+      formats: formats.join(","),
+      sourceLen: source.length,
     }),
   ]);
 

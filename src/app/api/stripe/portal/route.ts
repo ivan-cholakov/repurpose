@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { env } from "@/lib/env";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
 
 export async function POST() {
@@ -13,11 +14,9 @@ export async function POST() {
   }
 
   const stripe = getStripe();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
   const session = await stripe.billingPortal.sessions.create({
     customer: user.stripeCustomerId,
-    return_url: `${appUrl}/dashboard`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/dashboard`,
   });
 
   return NextResponse.json({ url: session.url });

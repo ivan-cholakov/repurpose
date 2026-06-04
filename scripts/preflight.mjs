@@ -8,13 +8,13 @@ const live = process.argv.includes("--live");
 let failures = 0;
 let warnings = 0;
 
-const ok = (m) => console.log(`  \x1b[32m✓\x1b[0m ${m}`);
+const ok = (m) => console.log(`  \x1b[32m[OK]\x1b[0m ${m}`);
 const bad = (m) => {
-  console.log(`  \x1b[31m✗\x1b[0m ${m}`);
+  console.log(`  \x1b[31m[FAIL]\x1b[0m ${m}`);
   failures++;
 };
 const warn = (m) => {
-  console.log(`  \x1b[33m!\x1b[0m ${m}`);
+  console.log(`  \x1b[33m[WARN]\x1b[0m ${m}`);
   warnings++;
 };
 
@@ -37,7 +37,8 @@ console.log("\nRepurpose preflight\n-------------------");
 
 console.log("\nCore:");
 const authSecret = check("AUTH_SECRET");
-if (authSecret && authSecret.length < 24) warn("AUTH_SECRET is short — use `openssl rand -base64 32`");
+if (authSecret && authSecret.length < 24)
+  warn("AUTH_SECRET is short — use `openssl rand -base64 32`");
 check("DATABASE_URL");
 check("NEXT_PUBLIC_APP_URL");
 
@@ -47,8 +48,13 @@ const anthropicKey = check("ANTHROPIC_API_KEY", { pattern: /^sk-ant-/ });
 console.log("\nStripe (billing — the 'money in' path):");
 const stripeKey = check("STRIPE_SECRET_KEY", { pattern: /^sk_(test|live)_/ });
 check("STRIPE_PRICE_ID", { pattern: /^price_/ });
-check("STRIPE_WEBHOOK_SECRET", { required: false, pattern: /^whsec_/, note: "needed for subscriptions to activate" });
-if (stripeKey?.startsWith("sk_test_")) warn("Using Stripe TEST keys — switch to live keys to take real money.");
+check("STRIPE_WEBHOOK_SECRET", {
+  required: false,
+  pattern: /^whsec_/,
+  note: "needed for subscriptions to activate",
+});
+if (stripeKey?.startsWith("sk_test_"))
+  warn("Using Stripe TEST keys — switch to live keys to take real money.");
 
 if (live) {
   console.log("\nLive checks:");
@@ -72,7 +78,10 @@ if (live) {
       const stripe = new Stripe(stripeKey);
       const acct = await stripe.accounts.retrieve();
       if (acct?.payouts_enabled) ok(`Stripe key works — payouts enabled (${acct.id})`);
-      else warn(`Stripe key works (${acct.id}) but payouts are NOT enabled — connect your bank in Stripe.`);
+      else
+        warn(
+          `Stripe key works (${acct.id}) but payouts are NOT enabled — connect your bank in Stripe.`,
+        );
       if (process.env.STRIPE_PRICE_ID) {
         try {
           await stripe.prices.retrieve(process.env.STRIPE_PRICE_ID);
@@ -89,8 +98,13 @@ if (live) {
 
 console.log("\n-------------------");
 if (failures > 0) {
-  console.log(`\x1b[31m${failures} blocker(s)\x1b[0m, ${warnings} warning(s). Fix blockers before launching.`);
+  console.log(
+    `\x1b[31m${failures} blocker(s)\x1b[0m, ${warnings} warning(s). Fix blockers before launching.`,
+  );
   process.exit(1);
 } else {
-  console.log(`\x1b[32mNo blockers.\x1b[0m ${warnings} warning(s).` + (live ? "" : " Re-run with --live to verify keys actually work."));
+  console.log(
+    `\x1b[32mNo blockers.\x1b[0m ${warnings} warning(s).` +
+      (live ? "" : " Re-run with --live to verify keys actually work."),
+  );
 }

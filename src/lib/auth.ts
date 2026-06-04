@@ -1,16 +1,17 @@
 import "server-only";
-import { cookies } from "next/headers";
-import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+import { jwtVerify, SignJWT } from "jose";
+import { cookies } from "next/headers";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { requireEnv } from "@/lib/env";
 
 const COOKIE_NAME = "repurpose_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 function secret(): Uint8Array {
-  const s = process.env.AUTH_SECRET;
-  if (!s) throw new Error("AUTH_SECRET is not set");
-  return new TextEncoder().encode(s);
+  return new TextEncoder().encode(requireEnv("AUTH_SECRET"));
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -58,5 +59,6 @@ async function getUserIdFromCookie(): Promise<string | null> {
 export async function getCurrentUser() {
   const userId = await getUserIdFromCookie();
   if (!userId) return null;
-  return prisma.user.findUnique({ where: { id: userId } });
+  const rows = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return rows[0] ?? null;
 }

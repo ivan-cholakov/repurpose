@@ -1,0 +1,8 @@
+echo "- Biome (lint + format check)"
+pnpm check:ci || exit 1
+
+echo "- TypeScript typecheck"
+pnpm typecheck || exit 1
+
+echo "- Dependency audit (high/critical only)"
+pnpm audit --audit-level=high || exit 1

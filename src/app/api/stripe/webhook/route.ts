@@ -1,11 +1,14 @@
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { env } from "@/lib/env";
 import { getStripe } from "@/lib/stripe";
 
 // Stripe needs the raw request body to verify the signature.
 export async function POST(req: Request) {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
     return NextResponse.json({ error: "Webhook not configured." }, { status: 503 });
   }
@@ -27,14 +30,14 @@ export async function POST(req: Request) {
   async function applySubscription(sub: Stripe.Subscription) {
     const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
     const active = sub.status === "active" || sub.status === "trialing";
-    await prisma.user.updateMany({
-      where: { stripeCustomerId: customerId },
-      data: {
+    await db
+      .update(users)
+      .set({
         plan: active ? "pro" : "free",
         subscriptionStatus: sub.status,
         stripeSubscriptionId: sub.id,
-      },
-    });
+      })
+      .where(eq(users.stripeCustomerId, customerId));
   }
 
   switch (event.type) {
@@ -42,9 +45,7 @@ export async function POST(req: Request) {
       const session = event.data.object as Stripe.Checkout.Session;
       if (session.subscription) {
         const subId =
-          typeof session.subscription === "string"
-            ? session.subscription
-            : session.subscription.id;
+          typeof session.subscription === "string" ? session.subscription : session.subscription.id;
         const sub = await stripe.subscriptions.retrieve(subId);
         await applySubscription(sub);
       }

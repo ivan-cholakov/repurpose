@@ -1,30 +1,34 @@
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { hashPassword, createSession } from "@/lib/auth";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { createSession, hashPassword } from "@/lib/auth";
+import { parseJson, signupSchema } from "@/lib/validation";
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json().catch(() => ({}));
-
-  if (typeof email !== "string" || typeof password !== "string") {
-    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  const parsed = await parseJson(req, signupSchema);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });
   }
-  const normalizedEmail = email.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    return NextResponse.json({ error: "Please enter a valid email." }, { status: 400 });
-  }
-  if (password.length < 8) {
-    return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+  const { email, password } = parsed.data;
+
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+  if (existing.length > 0) {
+    return NextResponse.json(
+      { error: "An account with that email already exists." },
+      { status: 409 },
+    );
   }
 
-  const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-  if (existing) {
-    return NextResponse.json({ error: "An account with that email already exists." }, { status: 409 });
-  }
+  const inserted = await db
+    .insert(users)
+    .values({ email, passwordHash: await hashPassword(password) })
+    .returning({ id: users.id });
 
-  const user = await prisma.user.create({
-    data: { email: normalizedEmail, passwordHash: await hashPassword(password) },
-  });
-
-  await createSession(user.id);
+  await createSession(inserted[0].id);
   return NextResponse.json({ ok: true });
 }
