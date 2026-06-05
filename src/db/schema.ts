@@ -6,7 +6,9 @@ export const users = sqliteTable("users", {
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  // Null for OAuth-only accounts (e.g. Google sign-in).
+  passwordHash: text("password_hash"),
+  googleId: text("google_id").unique(),
   // Set once the user clicks the emailed verification link. Generation is only
   // gated on this when a mail provider is configured (see /api/repurpose).
   emailVerifiedAt: integer("email_verified_at", { mode: "timestamp_ms" }),

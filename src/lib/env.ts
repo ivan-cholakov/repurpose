@@ -19,6 +19,11 @@ const EnvSchema = z.object({
   ANTHROPIC_API_KEY: optional(z.string().min(1)),
   // Comma-separated emails allowed to view /admin.
   ADMIN_EMAILS: optional(z.string().min(1)),
+  GOOGLE_CLIENT_ID: optional(z.string().min(1)),
+  GOOGLE_CLIENT_SECRET: optional(z.string().min(1)),
+  // Endpoint overrides so tests can run against a mock OAuth provider.
+  GOOGLE_OAUTH_AUTH_URL: optional(z.url()),
+  GOOGLE_OAUTH_TOKEN_URL: optional(z.url()),
   RESEND_API_KEY: optional(z.string().min(1)),
   EMAIL_FROM: optional(z.string().min(1)),
   STRIPE_SECRET_KEY: optional(z.string().min(1)),

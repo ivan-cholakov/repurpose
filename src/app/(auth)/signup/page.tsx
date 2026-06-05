@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { googleConfigured } from "@/lib/google-oauth";
 import AuthForm from "../auth-form";
 
 export default async function SignupPage() {
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
-  return <AuthForm mode="signup" />;
+  return <AuthForm mode="signup" googleEnabled={googleConfigured()} />;
 }
