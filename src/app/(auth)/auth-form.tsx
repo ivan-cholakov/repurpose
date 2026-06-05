@@ -82,6 +82,17 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
+        {!isSignup && (
+          <p className="text-right text-sm">
+            <Link
+              href="/forgot-password"
+              className="text-gray-500 underline hover:text-black dark:hover:text-white"
+            >
+              Forgot password?
+            </Link>
+          </p>
+        )}
+
         <button
           type="submit"
           disabled={loading}

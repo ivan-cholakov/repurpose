@@ -17,6 +17,8 @@ const EnvSchema = z.object({
   DATABASE_AUTH_TOKEN: optional(z.string().min(1)),
   AUTH_SECRET: optional(z.string().min(16, "AUTH_SECRET should be a long random string")),
   ANTHROPIC_API_KEY: optional(z.string().min(1)),
+  RESEND_API_KEY: optional(z.string().min(1)),
+  EMAIL_FROM: optional(z.string().min(1)),
   STRIPE_SECRET_KEY: optional(z.string().min(1)),
   STRIPE_WEBHOOK_SECRET: optional(z.string().min(1)),
   STRIPE_PRICE_ID: optional(z.string().min(1)),
