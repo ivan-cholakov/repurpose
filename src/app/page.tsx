@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
 import { PLANS } from "@/lib/plans";
 
-export default async function Home() {
-  const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
-
+// Authenticated visitors are redirected in src/proxy.ts (JWT check, no DB),
+// so this page has no request-time dependencies and prerenders fully static.
+export default function Home() {
   return (
     <main className="flex-1">
       {/* Nav */}

@@ -6,13 +6,15 @@ import { useState } from "react";
 
 export default function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter();
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Read from the form itself (not controlled state) so input typed before
+    // React hydrates is never lost.
+    const password = String(new FormData(e.currentTarget).get("password") ?? "");
     setError(null);
     setLoading(true);
     try {
@@ -61,11 +63,10 @@ export default function ResetPasswordForm({ token }: { token: string }) {
             </label>
             <input
               id="password"
+              name="password"
               type="password"
               required
               minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-black dark:border-gray-700 dark:bg-transparent dark:focus:border-white"
               placeholder="At least 8 characters"
             />
