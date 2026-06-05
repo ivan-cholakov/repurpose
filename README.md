@@ -7,11 +7,22 @@ subscription billing.
 
 ## Features
 
-- Email and password authentication with signed, HTTP-only session cookies
-- Content repurposing into four formats, each with a purpose-tuned prompt (powered by Claude)
+- Email/password authentication with signed, HTTP-only session cookies, plus optional Google
+  sign-in (OAuth authorization-code flow, env-gated)
+- Password reset and email verification via single-use emailed links (Resend), with graceful
+  degradation when no mail provider is configured
+- Content repurposing into six formats (X thread, LinkedIn, newsletter, TL;DR, Instagram,
+  YouTube), each with a purpose-tuned prompt (powered by Claude)
+- Progressive streaming output — results render as Claude generates them
+- Per-user voice & style notes injected into every generation prompt
+- Generation history with stored source and outputs (view, copy, delete)
 - Per-account monthly usage metering with automatic rollover
-- Free and Pro plans, with plan-based limits on volume and input length
+- Team seats: members pool the owner's plan and monthly limit via invite codes
+- Free and Pro plans (monthly or annual), with plan-based limits on volume and input length
 - Subscription billing via Stripe Checkout, the customer portal, and webhooks
+- Account settings: change email/password, voice notes, team management, account deletion
+- Admin funnel dashboard (signups → activated → paid) gated by an email allowlist
+- Per-IP rate limiting on the auth endpoints (production)
 - Marketing landing page with pricing and a dynamic Open Graph image
 
 ## Tech stack
@@ -49,16 +60,22 @@ Stripe variables are only needed to enable billing.
 
 ## Environment variables
 
-| Variable                | Required        | Description                                          |
-| ----------------------- | --------------- | ---------------------------------------------------- |
-| `DATABASE_URL`          | yes             | libSQL URL. `file:./dev.db` locally; Turso in prod.  |
-| `DATABASE_AUTH_TOKEN`   | prod (Turso)    | Auth token for a remote libSQL/Turso database.       |
-| `AUTH_SECRET`           | yes             | Secret used to sign session JWTs.                    |
-| `ANTHROPIC_API_KEY`     | for generation  | Claude API key.                                      |
-| `STRIPE_SECRET_KEY`     | for billing     | Stripe secret key.                                   |
-| `STRIPE_WEBHOOK_SECRET` | for billing     | Signing secret for the Stripe webhook endpoint.      |
-| `STRIPE_PRICE_ID`       | for billing     | Recurring Price ID for the Pro plan.                 |
-| `NEXT_PUBLIC_APP_URL`   | yes             | Public base URL, used for Stripe redirect URLs.      |
+| Variable                 | Required        | Description                                           |
+| ------------------------ | --------------- | ----------------------------------------------------- |
+| `DATABASE_URL`           | yes             | libSQL URL. `file:./dev.db` locally; Turso in prod.   |
+| `DATABASE_AUTH_TOKEN`    | prod (Turso)    | Auth token for a remote libSQL/Turso database.        |
+| `AUTH_SECRET`            | yes             | Secret used to sign session JWTs.                     |
+| `ANTHROPIC_API_KEY`      | for generation  | Claude API key.                                       |
+| `STRIPE_SECRET_KEY`      | for billing     | Stripe secret key.                                    |
+| `STRIPE_WEBHOOK_SECRET`  | for billing     | Signing secret for the Stripe webhook endpoint.       |
+| `STRIPE_PRICE_ID`        | for billing     | Recurring Price ID for the Pro plan (monthly).        |
+| `STRIPE_PRICE_ID_ANNUAL` | optional        | Recurring Price ID for annual billing.                |
+| `RESEND_API_KEY`         | for email       | Resend key; enables password reset + verification.    |
+| `EMAIL_FROM`             | optional        | From address for transactional email.                 |
+| `GOOGLE_CLIENT_ID`       | for Google SSO  | OAuth client ID; enables "Continue with Google".      |
+| `GOOGLE_CLIENT_SECRET`   | for Google SSO  | OAuth client secret.                                  |
+| `ADMIN_EMAILS`           | optional        | Comma-separated emails allowed to view `/admin`.      |
+| `NEXT_PUBLIC_APP_URL`    | yes             | Public base URL, used for redirects and email links.  |
 
 Environment variables are validated at startup with Zod (`src/lib/env.ts`). Missing optional
 secrets degrade the related feature gracefully rather than crashing the app.
@@ -95,8 +112,10 @@ Migrations are committed to source control so every environment converges on the
 
 End-to-end tests use Playwright and run against a real browser across two projects, a desktop
 Chrome viewport and a Pixel 5 mobile viewport. They cover the happy paths, edge cases
-(validation, auth errors, usage limits), and the Anthropic and Stripe integrations (mocked at
-the network boundary so the suite is deterministic without live keys).
+(validation, auth errors, usage limits), and the integrations. Playwright boots two mock
+servers alongside the app — `scripts/mock-anthropic.mjs` (Messages API, streaming + JSON) and
+`scripts/mock-google.mjs` (OAuth) — so real generations and the full Google sign-in flow run
+deterministically without live keys. Stripe stays mocked at the network boundary.
 
 ```bash
 pnpm test:e2e
