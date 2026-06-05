@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export default function AuthForm({
+  mode,
+  googleEnabled = false,
+}: {
+  mode: "login" | "signup";
+  googleEnabled?: boolean;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,6 +107,22 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           {loading ? "Please wait…" : isSignup ? "Create account" : "Log in"}
         </button>
       </form>
+
+      {googleEnabled && (
+        <>
+          <div className="mt-6 flex items-center gap-3 text-xs text-gray-400">
+            <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
+            or
+            <span className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
+          </div>
+          <a
+            href="/api/auth/google"
+            className="mt-4 block w-full rounded-lg border border-gray-300 py-2.5 text-center font-medium hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900"
+          >
+            Continue with Google
+          </a>
+        </>
+      )}
 
       <p className="mt-6 text-center text-sm text-gray-500">
         {isSignup ? (

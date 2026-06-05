@@ -18,7 +18,13 @@ export async function POST(req: Request) {
 
   const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
   const user = rows[0];
-  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+  if (user && !user.passwordHash) {
+    return NextResponse.json(
+      { error: "This account uses Google sign-in. Use the Google button instead." },
+      { status: 401 },
+    );
+  }
+  if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
   }
 

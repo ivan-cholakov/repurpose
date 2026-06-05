@@ -36,6 +36,13 @@
       "when": 1780662427040,
       "tag": "0004_curly_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1780663959930,
+      "tag": "0005_sour_black_knight",
+      "breakpoints": true
     }
   ]
 }
