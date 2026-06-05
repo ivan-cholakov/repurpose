@@ -1,4 +1,4 @@
-import { countDistinct, gte, isNotNull, sql } from "drizzle-orm";
+import { countDistinct, eq, gte, isNotNull, sql } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
@@ -31,6 +31,19 @@ export default async function AdminPage() {
       last7d: sql<number>`sum(case when ${gte(generations.createdAt, weekAgo)} then 1 else 0 end)`,
     })
     .from(generations);
+
+  // Landing A/B: how each design converts down the same funnel.
+  const abRows = await db
+    .select({
+      variant: users.abVariant,
+      signups: countDistinct(users.id),
+      activated: countDistinct(generations.userId),
+      paid: sql<number>`count(distinct case when ${users.plan} = 'pro' then ${users.id} end)`,
+    })
+    .from(users)
+    .leftJoin(generations, eq(generations.userId, users.id))
+    .groupBy(users.abVariant);
+  const abByVariant = new Map(abRows.map((r) => [r.variant, r]));
 
   const signups = totals.signups ?? 0;
   const activated = gen.activatedUsers ?? 0;
@@ -84,6 +97,46 @@ export default async function AdminPage() {
             <p className="mt-1 text-2xl font-semibold">{s.value}</p>
           </div>
         ))}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold text-gray-500">Landing A/B test</h2>
+        <table className="mt-3 w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200 text-left text-xs text-gray-500 dark:border-gray-800">
+              <th className="py-2 font-medium">Variant</th>
+              <th className="py-2 font-medium">Signups</th>
+              <th className="py-2 font-medium">Activated</th>
+              <th className="py-2 font-medium">Paid</th>
+              <th className="py-2 font-medium">Signup → paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(
+              [
+                ["a", "A — Editorial"],
+                ["b", "B — Darkroom"],
+              ] as const
+            ).map(([key, label]) => {
+              const row = abByVariant.get(key);
+              const signups = row?.signups ?? 0;
+              const paidCount = row?.paid ?? 0;
+              return (
+                <tr key={key} className="border-b border-gray-100 dark:border-gray-900">
+                  <td className="py-2">{label}</td>
+                  <td className="py-2">{signups}</td>
+                  <td className="py-2">{row?.activated ?? 0}</td>
+                  <td className="py-2">{paidCount}</td>
+                  <td className="py-2">{pct(paidCount, signups)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="mt-2 text-xs text-gray-400">
+          Visitors are split 50/50 at the edge (sticky cookie); signups carry their variant.
+          Pre-test accounts have no variant and are excluded.
+        </p>
       </section>
 
       <p className="mt-8 text-xs text-gray-400">

@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -30,9 +31,14 @@ export async function POST(req: Request) {
     );
   }
 
+  // Attribute the signup to the landing variant the visitor saw (A/B test).
+  const jar = await cookies();
+  const ab = jar.get("ab_landing")?.value;
+  const abVariant = ab === "a" || ab === "b" ? ab : null;
+
   const inserted = await db
     .insert(users)
-    .values({ email, passwordHash: await hashPassword(password) })
+    .values({ email, passwordHash: await hashPassword(password), abVariant })
     .returning({ id: users.id });
 
   await createSession(inserted[0].id);

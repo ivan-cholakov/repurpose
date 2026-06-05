@@ -10,11 +10,10 @@ export default function ResetPasswordForm({ token }: { token: string }) {
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    // Read from the form itself (not controlled state) so input typed before
-    // React hydrates is never lost.
-    const password = String(new FormData(e.currentTarget).get("password") ?? "");
+  // Form action (not onSubmit): React 19 replays pre-hydration submissions,
+  // so neither the typed value nor the submit itself can be lost.
+  async function submit(formData: FormData) {
+    const password = String(formData.get("password") ?? "");
     setError(null);
     setLoading(true);
     try {
@@ -39,10 +38,10 @@ export default function ResetPasswordForm({ token }: { token: string }) {
 
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-sm flex-col justify-center px-6">
-      <Link href="/" className="mb-8 text-center text-lg font-semibold tracking-tight">
+      <Link href="/" className="font-display mb-8 text-center text-2xl font-semibold">
         Repurpose
       </Link>
-      <h1 className="text-2xl font-bold tracking-tight">Choose a new password</h1>
+      <h1 className="font-display text-4xl font-semibold">Choose a new password</h1>
 
       {done ? (
         <div className="mt-6 rounded-xl border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
@@ -56,7 +55,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
           </Link>
         </div>
       ) : (
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form action={submit} className="mt-6 space-y-4">
           <div>
             <label className="block text-sm font-medium" htmlFor="password">
               New password
@@ -67,7 +66,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
               type="password"
               required
               minLength={8}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-black dark:border-gray-700 dark:bg-transparent dark:focus:border-white"
+              className="mt-1 w-full border border-(--rule) bg-transparent px-3 py-2.5 outline-none transition-colors focus:border-(--accent)"
               placeholder="At least 8 characters"
             />
           </div>
@@ -75,7 +74,7 @@ export default function ResetPasswordForm({ token }: { token: string }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-black py-2.5 font-medium text-white hover:bg-gray-800 disabled:opacity-60 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+            className="w-full bg-(--ink) py-3 font-medium text-(--paper) transition-colors hover:bg-(--accent) hover:text-[#fff8f0] disabled:opacity-60"
           >
             {loading ? "Please wait…" : "Set new password"}
           </button>

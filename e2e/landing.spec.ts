@@ -4,7 +4,9 @@ test.describe("Landing page", () => {
   test("shows hero, value prop, and pricing", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /Turn one post into ten/i })).toBeVisible();
-    await expect(page.getByText(/Powered by Claude/i).first()).toBeVisible();
+    // The masthead copy is hidden on small screens; the footer/colophon
+    // occurrence is visible on every viewport in both variants.
+    await expect(page.getByText(/Powered by Claude/i).last()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Simple pricing/i })).toBeVisible();
     await expect(page.getByText("€0")).toBeVisible();
     // "€19" also prefixes the annual "€190/yr" line, so match the monthly price.

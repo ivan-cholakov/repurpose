@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `ab_variant` text;

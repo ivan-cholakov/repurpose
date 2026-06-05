@@ -23,7 +23,7 @@ export default function DashboardNav({ email, planName }: { email: string; planN
     <header className="border-b border-gray-200 dark:border-gray-800">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-6 py-4">
         <div className="flex items-center gap-6">
-          <span className="font-semibold tracking-tight">Repurpose</span>
+          <span className="font-display text-xl font-semibold">Repurpose</span>
           <nav className="flex items-center gap-4 text-sm">
             {LINKS.map((l) => (
               <Link
@@ -31,7 +31,7 @@ export default function DashboardNav({ email, planName }: { email: string; planN
                 href={l.href}
                 className={
                   pathname === l.href
-                    ? "font-medium text-black dark:text-white"
+                    ? "font-medium underline decoration-(--accent) decoration-2 underline-offset-8"
                     : "text-gray-500 hover:text-black dark:hover:text-white"
                 }
               >
