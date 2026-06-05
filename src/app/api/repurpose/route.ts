@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { generations, users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
+import { mailConfigured } from "@/lib/mail";
 import { isUsageWindowExpired, planFor } from "@/lib/plans";
 import { repurpose } from "@/lib/repurpose";
 import { parseJson, repurposeSchema } from "@/lib/validation";
@@ -11,6 +12,14 @@ export async function POST(req: Request) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+
+  // Only enforce verification when emails can actually be delivered.
+  if (mailConfigured() && !user.emailVerifiedAt) {
+    return NextResponse.json(
+      { error: "Please verify your email before repurposing. Check your inbox for the link." },
+      { status: 403 },
+    );
   }
 
   const parsed = await parseJson(req, repurposeSchema);

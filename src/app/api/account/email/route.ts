@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { getCurrentUser, verifyPassword } from "@/lib/auth";
 import { changeEmailSchema, parseJson } from "@/lib/validation";
+import { sendVerificationEmail } from "@/lib/verification";
 
 export async function POST(req: Request) {
   const user = await getCurrentUser();
@@ -25,6 +26,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "That email is already in use." }, { status: 409 });
   }
 
-  await db.update(users).set({ email: newEmail }).where(eq(users.id, user.id));
+  // The new address is unverified until its emailed link is clicked.
+  await db
+    .update(users)
+    .set({ email: newEmail, emailVerifiedAt: null })
+    .where(eq(users.id, user.id));
+
+  sendVerificationEmail(user.id, newEmail).catch((err) => {
+    console.error("verification email failed:", err);
+  });
+
   return NextResponse.json({ ok: true, email: newEmail });
 }

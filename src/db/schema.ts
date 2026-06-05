@@ -7,6 +7,9 @@ export const users = sqliteTable("users", {
     .$defaultFn(() => crypto.randomUUID()),
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  // Set once the user clicks the emailed verification link. Generation is only
+  // gated on this when a mail provider is configured (see /api/repurpose).
+  emailVerifiedAt: integer("email_verified_at", { mode: "timestamp_ms" }),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
