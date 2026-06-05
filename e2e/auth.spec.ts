@@ -5,7 +5,8 @@ test.describe("Authentication", () => {
   test("happy path: signup lands on dashboard with usage shown", async ({ page }) => {
     const { email } = await registerNewUser(page);
     await expect(page.getByText(/repurposes left this month/i)).toBeVisible();
-    await expect(page.getByText(email)).toBeVisible();
+    // The email appears in both the nav and the verify banner.
+    await expect(page.getByText(email).first()).toBeVisible();
     await expect(page.getByText("Free")).toBeVisible();
   });
 

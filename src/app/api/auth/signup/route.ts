@@ -3,9 +3,15 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createSession, hashPassword } from "@/lib/auth";
+import { clientIp, rateLimit, tooMany } from "@/lib/rate-limit";
 import { parseJson, signupSchema } from "@/lib/validation";
+import { sendVerificationEmail } from "@/lib/verification";
 
 export async function POST(req: Request) {
+  if (!rateLimit(`signup:${clientIp(req)}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json(tooMany, { status: 429 });
+  }
+
   const parsed = await parseJson(req, signupSchema);
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });
@@ -30,5 +36,11 @@ export async function POST(req: Request) {
     .returning({ id: users.id });
 
   await createSession(inserted[0].id);
+
+  // Fire-and-forget; signup must not fail because the mail provider is down.
+  sendVerificationEmail(inserted[0].id, email).catch((err) => {
+    console.error("verification email failed:", err);
+  });
+
   return NextResponse.json({ ok: true });
 }

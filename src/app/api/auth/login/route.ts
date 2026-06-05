@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { createSession, verifyPassword } from "@/lib/auth";
+import { clientIp, rateLimit, tooMany } from "@/lib/rate-limit";
 import { loginSchema, parseJson } from "@/lib/validation";
 
 export async function POST(req: Request) {
+  if (!rateLimit(`login:${clientIp(req)}`, 10, 15 * 60 * 1000)) {
+    return NextResponse.json(tooMany, { status: 429 });
+  }
   const parsed = await parseJson(req, loginSchema);
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });

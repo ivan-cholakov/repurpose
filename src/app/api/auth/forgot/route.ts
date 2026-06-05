@@ -4,12 +4,17 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { env } from "@/lib/env";
 import { sendEmail } from "@/lib/mail";
+import { clientIp, rateLimit, tooMany } from "@/lib/rate-limit";
 import { createToken } from "@/lib/tokens";
 import { forgotPasswordSchema, parseJson } from "@/lib/validation";
 
 const TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export async function POST(req: Request) {
+  if (!rateLimit(`forgot:${clientIp(req)}`, 5, 15 * 60 * 1000)) {
+    return NextResponse.json(tooMany, { status: 429 });
+  }
+
   const parsed = await parseJson(req, forgotPasswordSchema);
   if (!parsed.ok) return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });
 
