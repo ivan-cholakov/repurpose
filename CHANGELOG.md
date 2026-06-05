@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/ivan-cholakov/repurpose/compare/v0.3.0...v0.4.0) (2026-06-05)
+
+
+### Features
+
+* editorial design system with A/B-tested landing variants ([#21](https://github.com/ivan-cholakov/repurpose/issues/21)) ([7498915](https://github.com/ivan-cholakov/repurpose/commit/7498915891f607ab477101aab30789a991acd2f7))
+
+
+### Performance Improvements
+
+* static landing, edge auth redirects, inline CSS, batched streaming renders ([#18](https://github.com/ivan-cholakov/repurpose/issues/18)) ([033e3d5](https://github.com/ivan-cholakov/repurpose/commit/033e3d5ac232ebe5dd451c9534e357533b35a4e6))
+
 ## [0.3.0](https://github.com/ivan-cholakov/repurpose/compare/v0.2.0...v0.3.0) (2026-06-05)
 
 
