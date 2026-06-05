@@ -25,6 +25,17 @@ subscription billing.
 - Per-IP rate limiting on the auth endpoints (production)
 - Marketing landing page with pricing and a dynamic Open Graph image
 
+## Demo
+
+A 90-second walkthrough of every flow — landing, signup, email verification, voice notes,
+streaming generation, history, team seats, annual upgrade, Google sign-in, and the admin
+funnel — recorded against the bundled mock Anthropic/Google servers (no real keys needed):
+
+![Full product demo](docs/media/demo/full-demo.gif)
+
+Re-record it any time with `node scripts/demo.mjs` (see the header comment for the required
+mock servers and env). An MP4 version lives at `docs/media/demo/full-demo.mp4`.
+
 ## Tech stack
 
 | Area        | Choice                                            |
