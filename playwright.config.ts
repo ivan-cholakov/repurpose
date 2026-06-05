@@ -38,6 +38,8 @@ export default defineConfig({
       STRIPE_SECRET_KEY: "sk_test_dummy_for_e2e",
       STRIPE_PRICE_ID: "price_dummy_for_e2e",
       STRIPE_PRICE_ID_ANNUAL: "price_dummy_annual_for_e2e",
+      // Fixed admin identity for the /admin e2e tests.
+      ADMIN_EMAILS: "admin-e2e@example.com",
     },
   },
 });
