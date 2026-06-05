@@ -33,6 +33,9 @@ export const users = sqliteTable("users", {
     .notNull()
     .default(sql`(unixepoch() * 1000)`),
 
+  // Landing-page A/B variant ("a" | "b") this signup came through.
+  abVariant: text("ab_variant"),
+
   // Billing
   plan: text("plan", { enum: ["free", "pro"] })
     .notNull()

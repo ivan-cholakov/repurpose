@@ -4,21 +4,21 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function ForgotPasswordForm() {
-  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [devLink, setDevLink] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  // Form action (not onSubmit): React 19 replays pre-hydration submissions,
+  // so this statically-served page never swallows a fast submit.
+  async function submit(formData: FormData) {
     setError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/auth/forgot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: String(formData.get("email") ?? "") }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -36,10 +36,10 @@ export default function ForgotPasswordForm() {
 
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-sm flex-col justify-center px-6">
-      <Link href="/" className="mb-8 text-center text-lg font-semibold tracking-tight">
+      <Link href="/" className="font-display mb-8 text-center text-2xl font-semibold">
         Repurpose
       </Link>
-      <h1 className="text-2xl font-bold tracking-tight">Reset your password</h1>
+      <h1 className="font-display text-4xl font-semibold">Reset your password</h1>
       <p className="mt-1 text-sm text-gray-500">
         Enter your account email and we&apos;ll send you a reset link.
       </p>
@@ -57,18 +57,17 @@ export default function ForgotPasswordForm() {
           )}
         </div>
       ) : (
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form action={submit} className="mt-6 space-y-4">
           <div>
             <label className="block text-sm font-medium" htmlFor="email">
               Email
             </label>
             <input
               id="email"
+              name="email"
               type="email"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-black dark:border-gray-700 dark:bg-transparent dark:focus:border-white"
+              className="mt-1 w-full border border-(--rule) bg-transparent px-3 py-2.5 outline-none transition-colors focus:border-(--accent)"
               placeholder="you@example.com"
             />
           </div>
@@ -76,7 +75,7 @@ export default function ForgotPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-black py-2.5 font-medium text-white hover:bg-gray-800 disabled:opacity-60 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+            className="w-full bg-(--ink) py-3 font-medium text-(--paper) transition-colors hover:bg-(--accent) hover:text-[#fff8f0] disabled:opacity-60"
           >
             {loading ? "Please wait…" : "Send reset link"}
           </button>

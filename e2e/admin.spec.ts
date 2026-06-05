@@ -37,8 +37,9 @@ test.describe("Admin funnel metrics", () => {
     await loginAsAdmin(page);
     await page.goto("/admin");
     await expect(page.getByRole("heading", { name: /Admin · Funnel/i })).toBeVisible();
-    await expect(page.getByText("Signups", { exact: true })).toBeVisible();
-    await expect(page.getByText(/Activated/)).toBeVisible();
+    // "Signups" appears in both the funnel and the A/B table; scope to the funnel row.
+    await expect(page.getByText("Signups", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/Activated \(≥1 repurpose\)/)).toBeVisible();
     await expect(page.getByText(/Paid \(Pro\)/)).toBeVisible();
     await expect(page.getByText(/Repurposes, all time/)).toBeVisible();
   });
