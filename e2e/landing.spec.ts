@@ -7,7 +7,9 @@ test.describe("Landing page", () => {
     await expect(page.getByText(/Powered by Claude/i).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: /Simple pricing/i })).toBeVisible();
     await expect(page.getByText("€0")).toBeVisible();
-    await expect(page.getByText("€19")).toBeVisible();
+    // "€19" also prefixes the annual "€190/yr" line, so match the monthly price.
+    await expect(page.getByText("€19").first()).toBeVisible();
+    await expect(page.getByText(/€190\/yr/)).toBeVisible();
   });
 
   test("primary CTA navigates to signup", async ({ page }) => {

@@ -106,6 +106,7 @@ export default async function Home() {
             <p className="mt-2 text-4xl font-bold">
               €19<span className="text-base font-normal text-gray-500">/mo</span>
             </p>
+            <p className="mt-1 text-sm text-gray-500">or €190/yr — 2 months free</p>
             <ul className="mt-6 space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>{PLANS.pro.monthlyLimit} repurposes / month</li>
               <li>All output formats</li>

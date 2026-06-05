@@ -7,7 +7,8 @@ test.describe("Authentication", () => {
     await expect(page.getByText(/repurposes left this month/i)).toBeVisible();
     // The email appears in both the nav and the verify banner.
     await expect(page.getByText(email).first()).toBeVisible();
-    await expect(page.getByText("Free")).toBeVisible();
+    // Exact match: the plan badge, not the "(2 months free)" annual button.
+    await expect(page.getByText("Free", { exact: true })).toBeVisible();
   });
 
   test("happy path: logout then login again", async ({ page }) => {

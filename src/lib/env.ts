@@ -22,6 +22,7 @@ const EnvSchema = z.object({
   STRIPE_SECRET_KEY: optional(z.string().min(1)),
   STRIPE_WEBHOOK_SECRET: optional(z.string().min(1)),
   STRIPE_PRICE_ID: optional(z.string().min(1)),
+  STRIPE_PRICE_ID_ANNUAL: optional(z.string().min(1)),
   NEXT_PUBLIC_APP_URL: z.preprocess(
     (v) => (v === "" || v === undefined ? "http://localhost:3000" : v),
     z.url(),

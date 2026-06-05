@@ -14,3 +14,13 @@ export function getStripe(): Stripe {
 export function stripeConfigured(): boolean {
   return Boolean(env.STRIPE_SECRET_KEY && env.STRIPE_PRICE_ID);
 }
+
+export function annualConfigured(): boolean {
+  return stripeConfigured() && Boolean(env.STRIPE_PRICE_ID_ANNUAL);
+}
+
+/** Stripe Price ID for the requested billing interval. */
+export function priceFor(interval: "month" | "year"): string {
+  if (interval === "year" && env.STRIPE_PRICE_ID_ANNUAL) return env.STRIPE_PRICE_ID_ANNUAL;
+  return requireEnv("STRIPE_PRICE_ID");
+}
