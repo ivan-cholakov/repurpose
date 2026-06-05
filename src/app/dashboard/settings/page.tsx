@@ -12,6 +12,7 @@ export default async function SettingsPage() {
       email={user.email}
       planName={planFor(user.plan).name}
       hasPassword={Boolean(user.passwordHash)}
+      voiceNotes={user.voiceNotes ?? ""}
     />
   );
 }

@@ -47,10 +47,21 @@ export interface RepurposeResult {
 
 const MODEL = "claude-sonnet-4-6";
 
-export async function repurpose(source: string, formats: FormatId[]): Promise<RepurposeResult[]> {
+const BASE_SYSTEM =
+  "You are an expert content repurposing assistant. You take long-form source content and rewrite it faithfully into a specific target format. Preserve the author's facts and intent. Output ONLY the finished content, with no preamble, no explanation, and no surrounding quotes or markdown code fences.";
+
+export async function repurpose(
+  source: string,
+  formats: FormatId[],
+  voiceNotes?: string | null,
+): Promise<RepurposeResult[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
   const client = new Anthropic({ apiKey });
+
+  const system = voiceNotes?.trim()
+    ? `${BASE_SYSTEM}\n\nThe author has described their voice and style. Match it closely in every output:\n${voiceNotes.trim()}`
+    : BASE_SYSTEM;
 
   // One call per format, run concurrently, for cleaner separated output.
   const tasks = formats.map(async (format) => {
@@ -58,8 +69,7 @@ export async function repurpose(source: string, formats: FormatId[]): Promise<Re
     const message = await client.messages.create({
       model: MODEL,
       max_tokens: 1500,
-      system:
-        "You are an expert content repurposing assistant. You take long-form source content and rewrite it faithfully into a specific target format. Preserve the author's facts and intent. Output ONLY the finished content, with no preamble, no explanation, and no surrounding quotes or markdown code fences.",
+      system,
       messages: [
         {
           role: "user",

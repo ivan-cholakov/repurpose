@@ -19,6 +19,10 @@ export const users = sqliteTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   subscriptionStatus: text("subscription_status"),
 
+  // Optional voice/style notes injected into every generation prompt so the
+  // output sounds like the author, not generic AI.
+  voiceNotes: text("voice_notes"),
+
   // Usage metering (resets monthly)
   usageCount: integer("usage_count").notNull().default(0),
   usagePeriodStart: integer("usage_period_start", { mode: "timestamp_ms" })

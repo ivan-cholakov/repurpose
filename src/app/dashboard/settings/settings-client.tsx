@@ -7,6 +7,7 @@ interface Props {
   email: string;
   planName: string;
   hasPassword: boolean;
+  voiceNotes: string;
 }
 
 export default function SettingsClient(props: Props) {
@@ -19,6 +20,7 @@ export default function SettingsClient(props: Props) {
         </p>
       </div>
 
+      <VoiceNotes initial={props.voiceNotes} />
       <ChangeEmail current={props.email} />
       {props.hasPassword && <ChangePassword />}
       <DeleteAccount hasPassword={props.hasPassword} />
@@ -45,6 +47,67 @@ const inputCls =
   "mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:border-black dark:border-gray-700 dark:bg-transparent dark:focus:border-white";
 const buttonCls =
   "rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200";
+
+function VoiceNotes({ initial }: { initial: string }) {
+  const [notes, setNotes] = useState(initial);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    setBusy(true);
+    try {
+      const res = await fetch("/api/account/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voiceNotes: notes }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMsg({ ok: false, text: data.error ?? "Could not save voice notes." });
+        return;
+      }
+      setMsg({ ok: true, text: "Voice notes saved." });
+    } catch {
+      setMsg({ ok: false, text: "Network error. Please try again." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Section title="Voice & style">
+      <p className="mt-2 text-sm text-gray-500">
+        Describe how you write — tone, quirks, phrases you use or avoid. Every repurpose is steered
+        by these notes so the output sounds like you.
+      </p>
+      <form onSubmit={submit} className="mt-3 space-y-3">
+        <div>
+          <label htmlFor="voice-notes" className="sr-only">
+            Voice notes
+          </label>
+          <textarea
+            id="voice-notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            maxLength={2000}
+            rows={4}
+            placeholder="e.g. Direct and a little contrarian. Short sentences. First person. No emojis, no corporate buzzwords. I sign off threads with a question."
+            className={`${inputCls} resize-y`}
+          />
+          <div className="mt-1 text-right text-xs text-gray-400">{notes.length} / 2,000</div>
+        </div>
+        <button type="submit" disabled={busy} className={buttonCls}>
+          {busy ? "…" : "Save voice notes"}
+        </button>
+        {msg && (
+          <p className={`text-sm ${msg.ok ? "text-green-700" : "text-red-600"}`}>{msg.text}</p>
+        )}
+      </form>
+    </Section>
+  );
+}
 
 function ChangeEmail({ current }: { current: string }) {
   const router = useRouter();
