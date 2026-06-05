@@ -99,45 +99,65 @@ export default function DashboardClient(props: Props) {
     const order = [...selected];
     let buffer = "";
 
+    // Tokens can arrive far faster than 60fps; coalesce them so React renders
+    // at most once per animation frame instead of once per delta.
+    let frame: number | null = null;
     const flush = () => {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        const list = Array.from(byFormat.values()).sort(
+          (a, b) => order.indexOf(a.format) - order.indexOf(b.format),
+        );
+        setResults(list.map((r) => ({ ...r })));
+      });
+    };
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line);
+          switch (event.type) {
+            case "start":
+              byFormat.set(event.format, {
+                format: event.format,
+                label: event.label,
+                content: "",
+              });
+              flush();
+              break;
+            case "delta": {
+              const entry = byFormat.get(event.format);
+              if (entry) {
+                entry.content += event.text;
+                flush();
+              }
+              break;
+            }
+            case "complete":
+              if (event.usage) setUsed(event.usage.used);
+              break;
+            case "error":
+              setError(event.error ?? "Generation failed.");
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    } finally {
+      // Final synchronous flush so the last tokens always land.
+      if (frame !== null) cancelAnimationFrame(frame);
       const list = Array.from(byFormat.values()).sort(
         (a, b) => order.indexOf(a.format) - order.indexOf(b.format),
       );
       setResults(list);
-    };
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const event = JSON.parse(line);
-        switch (event.type) {
-          case "start":
-            byFormat.set(event.format, { format: event.format, label: event.label, content: "" });
-            flush();
-            break;
-          case "delta": {
-            const entry = byFormat.get(event.format);
-            if (entry) {
-              entry.content += event.text;
-              flush();
-            }
-            break;
-          }
-          case "complete":
-            if (event.usage) setUsed(event.usage.used);
-            break;
-          case "error":
-            setError(event.error ?? "Generation failed.");
-            break;
-          default:
-            break;
-        }
-      }
     }
   }
 

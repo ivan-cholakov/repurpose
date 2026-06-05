@@ -1,9 +1,7 @@
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
 import ForgotPasswordForm from "./forgot-form";
 
-export default async function ForgotPasswordPage() {
-  const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+// Authenticated visitors are redirected in src/proxy.ts (JWT check, no DB).
+// No env dependence, so this page can prerender fully static.
+export default function ForgotPasswordPage() {
   return <ForgotPasswordForm />;
 }
