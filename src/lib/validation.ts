@@ -44,6 +44,21 @@ export const repurposeSchema = z.object({
     .max(FORMAT_IDS.length),
 });
 
+export const changeEmailSchema = z.object({
+  newEmail: email,
+  password: z.string().min(1, "Your current password is required.").max(200),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Your current password is required.").max(200),
+  newPassword: z.string().min(8, "New password must be at least 8 characters.").max(200),
+});
+
+export const deleteAccountSchema = z.object({
+  password: z.string().max(200).optional(),
+  confirm: z.literal("DELETE", { message: 'Type "DELETE" to confirm.' }),
+});
+
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RepurposeInput = z.infer<typeof repurposeSchema>;
