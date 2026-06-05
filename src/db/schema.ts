@@ -48,6 +48,24 @@ export const generations = sqliteTable("generations", {
     .default(sql`(unixepoch() * 1000)`),
 });
 
+// Single-use, expiring tokens (password reset, email verification). Only a
+// SHA-256 hash is stored; the raw token lives in the emailed link.
+export const tokens = sqliteTable("tokens", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type", { enum: ["password_reset", "email_verify"] }).notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
+  usedAt: integer("used_at", { mode: "timestamp_ms" }),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Generation = typeof generations.$inferSelect;

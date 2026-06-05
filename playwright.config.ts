@@ -32,6 +32,9 @@ export default defineConfig({
     // network calls are mocked in tests, so these keys are never used for real.
     env: {
       AUTH_SECRET: "e2e-test-secret-please-change-in-prod-1234567890",
+      // Absolute links built by the app (e.g. password-reset dev links) must
+      // point back at the e2e server, not the default :3000.
+      NEXT_PUBLIC_APP_URL: baseURL,
       STRIPE_SECRET_KEY: "sk_test_dummy_for_e2e",
       STRIPE_PRICE_ID: "price_dummy_for_e2e",
     },

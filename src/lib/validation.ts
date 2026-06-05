@@ -54,6 +54,13 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(8, "New password must be at least 8 characters.").max(200),
 });
 
+export const forgotPasswordSchema = z.object({ email });
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Reset token is missing.").max(200),
+  password: z.string().min(8, "Password must be at least 8 characters.").max(200),
+});
+
 export const voiceNotesSchema = z.object({
   // Empty string clears the notes.
   voiceNotes: z.string().trim().max(2000, "Voice notes are limited to 2,000 characters."),
