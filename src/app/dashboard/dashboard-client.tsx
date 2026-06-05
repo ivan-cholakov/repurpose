@@ -9,6 +9,8 @@ const FORMAT_OPTIONS = [
   { id: "linkedin", label: "LinkedIn post" },
   { id: "newsletter", label: "Newsletter blurb" },
   { id: "tldr", label: "TL;DR summary" },
+  { id: "instagram", label: "Instagram caption" },
+  { id: "youtube", label: "YouTube description" },
 ] as const;
 
 // One-click sample so first-time users see what the tool does before spending credits.

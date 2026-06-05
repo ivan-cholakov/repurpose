@@ -2,7 +2,14 @@ import { z } from "zod";
 
 // Output formats the repurpose endpoint understands. Kept here (not in repurpose.ts)
 // so client and validation code can import it without pulling in the Anthropic SDK.
-export const FORMAT_IDS = ["thread", "linkedin", "newsletter", "tldr"] as const;
+export const FORMAT_IDS = [
+  "thread",
+  "linkedin",
+  "newsletter",
+  "tldr",
+  "instagram",
+  "youtube",
+] as const;
 export const formatSchema = z.enum(FORMAT_IDS);
 export type FormatId = (typeof FORMAT_IDS)[number];
 
