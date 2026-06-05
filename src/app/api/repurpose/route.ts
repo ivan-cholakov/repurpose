@@ -68,6 +68,8 @@ export async function POST(req: Request) {
       userId: user.id,
       formats: formats.join(","),
       sourceLen: source.length,
+      source,
+      results: JSON.stringify(results),
     }),
   ]);
 
