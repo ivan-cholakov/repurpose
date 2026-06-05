@@ -35,6 +35,10 @@ export const generations = sqliteTable("generations", {
     .references(() => users.id, { onDelete: "cascade" }),
   formats: text("formats").notNull(),
   sourceLen: integer("source_len").notNull(),
+  // Full content so users can revisit past repurposes. `results` is a JSON
+  // array of { format, label, content }. Defaults keep pre-existing rows valid.
+  source: text("source").notNull().default(""),
+  results: text("results").notNull().default("[]"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
     .default(sql`(unixepoch() * 1000)`),

@@ -20,9 +20,7 @@ export default async function DashboardPage({
 
   return (
     <DashboardClient
-      email={user.email}
       planId={user.plan === "pro" ? "pro" : "free"}
-      planName={plan.name}
       used={used}
       limit={plan.monthlyLimit}
       maxInputChars={plan.maxInputChars}
