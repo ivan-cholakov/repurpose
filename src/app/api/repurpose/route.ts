@@ -5,7 +5,7 @@ import { generations, users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { mailConfigured } from "@/lib/mail";
 import { isUsageWindowExpired, planFor } from "@/lib/plans";
-import { repurpose } from "@/lib/repurpose";
+import { type RepurposeStreamEvent, repurpose, repurposeStreaming } from "@/lib/repurpose";
 import { parseJson, repurposeSchema } from "@/lib/validation";
 
 export async function POST(req: Request) {
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.errors[0] }, { status: 400 });
   }
-  const { source, formats } = parsed.data;
+  const { source, formats, stream } = parsed.data;
 
   const plan = planFor(user.plan);
 
@@ -59,6 +59,53 @@ export async function POST(req: Request) {
     );
   }
 
+  // Count one repurpose per request (regardless of how many formats).
+  // (TS can't narrow `user` inside a closure, so capture the id here.)
+  const userId = user.id;
+  async function persist(results: Awaited<ReturnType<typeof repurpose>>) {
+    await db.batch([
+      db
+        .update(users)
+        .set({ usageCount: sql`${users.usageCount} + 1` })
+        .where(eq(users.id, userId)),
+      db.insert(generations).values({
+        userId,
+        formats: formats.join(","),
+        sourceLen: source.length,
+        source,
+        results: JSON.stringify(results),
+      }),
+    ]);
+  }
+
+  const usage = { used: usageCount + 1, limit: plan.monthlyLimit };
+
+  // Streaming path: NDJSON progress events while all formats generate.
+  if (stream) {
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      async start(controller) {
+        const emit = (event: RepurposeStreamEvent) =>
+          controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+        try {
+          const results = await repurposeStreaming(source, formats, user.voiceNotes, emit);
+          await persist(results);
+          emit({ type: "complete", usage });
+        } catch (err) {
+          emit({ type: "error", error: err instanceof Error ? err.message : "Generation failed." });
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(body, {
+      headers: {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
+  }
+
   let results: Awaited<ReturnType<typeof repurpose>>;
   try {
     results = await repurpose(source, formats, user.voiceNotes);
@@ -67,23 +114,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 502 });
   }
 
-  // Count one repurpose per request (regardless of how many formats).
-  await db.batch([
-    db
-      .update(users)
-      .set({ usageCount: sql`${users.usageCount} + 1` })
-      .where(eq(users.id, user.id)),
-    db.insert(generations).values({
-      userId: user.id,
-      formats: formats.join(","),
-      sourceLen: source.length,
-      source,
-      results: JSON.stringify(results),
-    }),
-  ]);
-
-  return NextResponse.json({
-    results,
-    usage: { used: usageCount + 1, limit: plan.monthlyLimit },
-  });
+  await persist(results);
+  return NextResponse.json({ results, usage });
 }

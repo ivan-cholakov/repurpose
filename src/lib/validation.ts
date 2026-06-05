@@ -42,6 +42,8 @@ export const repurposeSchema = z.object({
     .array(formatSchema)
     .min(1, "Select at least one output format.")
     .max(FORMAT_IDS.length),
+  // Opt into NDJSON progress events instead of a single JSON response.
+  stream: z.boolean().optional(),
 });
 
 export const changeEmailSchema = z.object({

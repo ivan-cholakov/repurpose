@@ -65,6 +65,34 @@ test.describe("Repurpose flow", () => {
     await expect(page.getByText("Mocked YouTube description.")).toBeVisible();
   });
 
+  test("streaming NDJSON responses render progressively and update usage", async ({ page }) => {
+    await registerNewUser(page);
+    const events = [
+      { type: "start", format: "thread", label: "X / Twitter thread" },
+      { type: "delta", format: "thread", text: "1/ Streamed " },
+      { type: "delta", format: "thread", text: "tweet content." },
+      { type: "done", format: "thread" },
+      { type: "start", format: "linkedin", label: "LinkedIn post" },
+      { type: "delta", format: "linkedin", text: "Streamed LinkedIn body." },
+      { type: "done", format: "linkedin" },
+      { type: "complete", usage: { used: 1, limit: 5 } },
+    ];
+    await page.route("**/api/repurpose", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/x-ndjson",
+        body: `${events.map((e) => JSON.stringify(e)).join("\n")}\n`,
+      }),
+    );
+
+    await page.getByRole("button", { name: /Load sample/i }).click();
+    await page.getByRole("button", { name: /^Repurpose$/ }).click();
+
+    await expect(page.getByText("1/ Streamed tweet content.")).toBeVisible();
+    await expect(page.getByText("Streamed LinkedIn body.")).toBeVisible();
+    await expect(page.getByText(/4 of 5 repurposes left/i)).toBeVisible();
+  });
+
   test("edge: too-short source is rejected client-side", async ({ page }) => {
     await registerNewUser(page);
     await page.locator("#source-content").fill("too short");

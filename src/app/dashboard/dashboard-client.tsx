@@ -66,19 +66,77 @@ export default function DashboardClient(props: Props) {
       const res = await fetch("/api/repurpose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, formats: selected }),
+        body: JSON.stringify({ source, formats: selected, stream: true }),
       });
-      const data = await res.json();
+
       if (!res.ok) {
+        const data = await res.json();
         setError(data.error ?? "Generation failed.");
         return;
       }
-      setResults(data.results);
-      if (data.usage) setUsed(data.usage.used);
+
+      // Streaming responses render progressively; plain JSON (older servers,
+      // test mocks) falls through to the one-shot path.
+      if (res.headers.get("content-type")?.includes("application/x-ndjson") && res.body) {
+        await consumeStream(res.body);
+      } else {
+        const data = await res.json();
+        setResults(data.results);
+        if (data.usage) setUsed(data.usage.used);
+      }
     } catch {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function consumeStream(body: ReadableStream<Uint8Array>) {
+    const reader = body.getReader();
+    const decoder = new TextDecoder();
+    const byFormat = new Map<string, Result>();
+    const order = [...selected];
+    let buffer = "";
+
+    const flush = () => {
+      const list = Array.from(byFormat.values()).sort(
+        (a, b) => order.indexOf(a.format) - order.indexOf(b.format),
+      );
+      setResults(list);
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const event = JSON.parse(line);
+        switch (event.type) {
+          case "start":
+            byFormat.set(event.format, { format: event.format, label: event.label, content: "" });
+            flush();
+            break;
+          case "delta": {
+            const entry = byFormat.get(event.format);
+            if (entry) {
+              entry.content += event.text;
+              flush();
+            }
+            break;
+          }
+          case "complete":
+            if (event.usage) setUsed(event.usage.used);
+            break;
+          case "error":
+            setError(event.error ?? "Generation failed.");
+            break;
+          default:
+            break;
+        }
+      }
     }
   }
 
@@ -209,7 +267,7 @@ export default function DashboardClient(props: Props) {
               Your repurposed content will appear here.
             </div>
           )}
-          {loading && (
+          {loading && results.length === 0 && (
             <div className="flex h-full min-h-48 items-center justify-center rounded-xl border border-dashed border-gray-300 p-6 text-sm text-gray-400 dark:border-gray-700">
               Generating {selected.length} format{selected.length > 1 ? "s" : ""}…
             </div>
