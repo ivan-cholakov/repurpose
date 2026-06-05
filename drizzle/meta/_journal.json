@@ -15,6 +15,13 @@
       "when": 1780660895253,
       "tag": "0001_majestic_pretty_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1780661749428,
+      "tag": "0002_cuddly_madame_masque",
+      "breakpoints": true
     }
   ]
 }

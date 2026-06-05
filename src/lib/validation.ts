@@ -54,6 +54,11 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(8, "New password must be at least 8 characters.").max(200),
 });
 
+export const voiceNotesSchema = z.object({
+  // Empty string clears the notes.
+  voiceNotes: z.string().trim().max(2000, "Voice notes are limited to 2,000 characters."),
+});
+
 export const deleteAccountSchema = z.object({
   password: z.string().max(200).optional(),
   confirm: z.literal("DELETE", { message: 'Type "DELETE" to confirm.' }),

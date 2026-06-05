@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
   let results: Awaited<ReturnType<typeof repurpose>>;
   try {
-    results = await repurpose(source, formats);
+    results = await repurpose(source, formats, user.voiceNotes);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Generation failed.";
     return NextResponse.json({ error: message }, { status: 502 });
