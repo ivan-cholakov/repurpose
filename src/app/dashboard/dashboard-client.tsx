@@ -31,6 +31,7 @@ interface Props {
   limit: number;
   maxInputChars: number;
   billingEnabled: boolean;
+  annualEnabled: boolean;
   hasCustomer: boolean;
   justUpgraded: boolean;
 }
@@ -140,10 +141,18 @@ export default function DashboardClient(props: Props) {
     }
   }
 
-  async function startBilling(endpoint: "checkout" | "portal") {
+  async function startBilling(endpoint: "checkout" | "portal", interval?: "month" | "year") {
     setBusyBilling(true);
     try {
-      const res = await fetch(`/api/stripe/${endpoint}`, { method: "POST" });
+      const res = await fetch(`/api/stripe/${endpoint}`, {
+        method: "POST",
+        ...(interval
+          ? {
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ interval }),
+            }
+          : {}),
+      });
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
@@ -172,15 +181,27 @@ export default function DashboardClient(props: Props) {
           month
         </div>
         {props.planId === "free" ? (
-          <button
-            type="button"
-            onClick={() => startBilling("checkout")}
-            disabled={busyBilling || !props.billingEnabled}
-            title={props.billingEnabled ? "" : "Billing not configured yet"}
-            className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-          >
-            {busyBilling ? "…" : "Upgrade to Pro"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => startBilling("checkout", "month")}
+              disabled={busyBilling || !props.billingEnabled}
+              title={props.billingEnabled ? "" : "Billing not configured yet"}
+              className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+            >
+              {busyBilling ? "…" : "Upgrade to Pro — €19/mo"}
+            </button>
+            {props.annualEnabled && (
+              <button
+                type="button"
+                onClick={() => startBilling("checkout", "year")}
+                disabled={busyBilling}
+                className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-900"
+              >
+                {busyBilling ? "…" : "Annual — €190/yr (2 months free)"}
+              </button>
+            )}
+          </div>
         ) : (
           <button
             type="button"

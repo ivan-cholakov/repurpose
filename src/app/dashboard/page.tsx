@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { isUsageWindowExpired, planFor } from "@/lib/plans";
-import { stripeConfigured } from "@/lib/stripe";
+import { annualConfigured, stripeConfigured } from "@/lib/stripe";
 import DashboardClient from "./dashboard-client";
 
 export default async function DashboardPage({
@@ -25,6 +25,7 @@ export default async function DashboardPage({
       limit={plan.monthlyLimit}
       maxInputChars={plan.maxInputChars}
       billingEnabled={stripeConfigured()}
+      annualEnabled={annualConfigured()}
       hasCustomer={Boolean(user.stripeCustomerId)}
       justUpgraded={justUpgraded}
     />

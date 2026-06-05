@@ -37,6 +37,7 @@ export default defineConfig({
       NEXT_PUBLIC_APP_URL: baseURL,
       STRIPE_SECRET_KEY: "sk_test_dummy_for_e2e",
       STRIPE_PRICE_ID: "price_dummy_for_e2e",
+      STRIPE_PRICE_ID_ANNUAL: "price_dummy_annual_for_e2e",
     },
   },
 });

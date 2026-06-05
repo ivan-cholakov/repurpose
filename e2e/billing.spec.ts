@@ -21,6 +21,26 @@ test.describe("Billing", () => {
     await expect(page.getByText(/You're on Pro now/i)).toBeVisible();
   });
 
+  test("annual checkout sends interval=year to the API", async ({ page }) => {
+    await registerNewUser(page);
+
+    let capturedBody: string | null = null;
+    await page.route("**/api/stripe/checkout", (route) => {
+      capturedBody = route.request().postData();
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ url: "/dashboard?upgraded=1" }),
+      });
+    });
+
+    const annual = page.getByRole("button", { name: /Annual — €190\/yr/i });
+    await expect(annual).toBeVisible();
+    await annual.click();
+    await expect(page).toHaveURL(/\/dashboard\?upgraded=1$/);
+    expect(JSON.parse(capturedBody ?? "{}")).toEqual({ interval: "year" });
+  });
+
   test("edge: checkout error is surfaced, not swallowed", async ({ page }) => {
     await registerNewUser(page);
     await page.route("**/api/stripe/checkout", (route) =>
