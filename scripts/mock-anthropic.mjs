@@ -21,6 +21,11 @@ function pickReply(body) {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Health check for Playwright's webServer readiness probe (404 won't do).
+  if (req.method === "GET") {
+    res.writeHead(200).end("ok");
+    return;
+  }
   if (req.method !== "POST" || !req.url.includes("/messages")) {
     res.writeHead(404).end();
     return;

@@ -1,6 +1,23 @@
 import { sql } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+// Teams pool the owner's plan and usage across members. Members join via the
+// team's invite code (regenerable by the owner).
+export const teams = sqliteTable("teams", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  ownerId: text("owner_id").notNull(),
+  inviteCode: text("invite_code")
+    .notNull()
+    .unique()
+    .$defaultFn(() => crypto.randomUUID().replace(/-/g, "")),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+});
+
 export const users = sqliteTable("users", {
   id: text("id")
     .primaryKey()
@@ -27,6 +44,9 @@ export const users = sqliteTable("users", {
   // Optional voice/style notes injected into every generation prompt so the
   // output sounds like the author, not generic AI.
   voiceNotes: text("voice_notes"),
+
+  // Team membership; plan and usage pool on the team owner's account.
+  teamId: text("team_id").references(() => teams.id, { onDelete: "set null" }),
 
   // Usage metering (resets monthly)
   usageCount: integer("usage_count").notNull().default(0),
@@ -74,3 +94,4 @@ export const tokens = sqliteTable("tokens", {
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Generation = typeof generations.$inferSelect;
+export type Team = typeof teams.$inferSelect;

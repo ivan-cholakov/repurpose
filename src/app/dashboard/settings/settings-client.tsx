@@ -3,11 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+export interface TeamInfo {
+  name: string;
+  role: "owner" | "member";
+  inviteCode: string | null;
+  members: Array<{ id: string; email: string }>;
+}
+
 interface Props {
   email: string;
   planName: string;
   hasPassword: boolean;
   voiceNotes: string;
+  team: TeamInfo | null;
 }
 
 export default function SettingsClient(props: Props) {
@@ -21,6 +29,7 @@ export default function SettingsClient(props: Props) {
       </div>
 
       <VoiceNotes initial={props.voiceNotes} />
+      <TeamSection team={props.team} />
       <ChangeEmail current={props.email} />
       {props.hasPassword && <ChangePassword />}
       <DeleteAccount hasPassword={props.hasPassword} />
@@ -105,6 +114,181 @@ function VoiceNotes({ initial }: { initial: string }) {
           <p className={`text-sm ${msg.ok ? "text-green-700" : "text-red-600"}`}>{msg.text}</p>
         )}
       </form>
+    </Section>
+  );
+}
+
+function TeamSection({ team }: { team: TeamInfo | null }) {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function call(path: string, init?: RequestInit) {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch(path, init);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const post = (path: string, body?: unknown) =>
+    call(path, {
+      method: "POST",
+      ...(body !== undefined
+        ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+        : {}),
+    });
+
+  if (!team) {
+    return (
+      <Section title="Team">
+        <p className="mt-2 text-sm text-gray-500">
+          Pool one Pro subscription across your whole team: members repurpose against the
+          owner&apos;s plan and limits.
+        </p>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              post("/api/team", { name });
+            }}
+            className="space-y-2"
+          >
+            <label htmlFor="team-name" className="text-sm font-medium">
+              Create a team
+            </label>
+            <input
+              id="team-name"
+              required
+              minLength={2}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Acme Content"
+              className={inputCls}
+            />
+            <button type="submit" disabled={busy} className={buttonCls}>
+              {busy ? "…" : "Create team"}
+            </button>
+          </form>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              post("/api/team/join", { code });
+            }}
+            className="space-y-2"
+          >
+            <label htmlFor="team-code" className="text-sm font-medium">
+              Join with an invite code
+            </label>
+            <input
+              id="team-code"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Paste invite code"
+              className={inputCls}
+            />
+            <button type="submit" disabled={busy} className={buttonCls}>
+              {busy ? "…" : "Join team"}
+            </button>
+          </form>
+        </div>
+        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      </Section>
+    );
+  }
+
+  return (
+    <Section title={`Team · ${team.name}`}>
+      <p className="mt-2 text-sm text-gray-500">
+        {team.role === "owner"
+          ? "Members repurpose against your plan and monthly limit."
+          : "You repurpose against this team's shared plan and limit."}
+      </p>
+
+      {team.role === "owner" && team.inviteCode && (
+        <div className="mt-3">
+          <p className="text-sm font-medium">Invite code</p>
+          <div className="mt-1 flex items-center gap-2">
+            <code className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm dark:border-gray-800">
+              {team.inviteCode}
+            </code>
+            <button
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(team.inviteCode ?? "");
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              className="text-xs font-medium text-gray-500 hover:text-black dark:hover:text-white"
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {team.role === "owner" && (
+        <div className="mt-4">
+          <p className="text-sm font-medium">Members</p>
+          {team.members.length === 0 ? (
+            <p className="mt-1 text-sm text-gray-400">
+              No members yet — share the invite code above.
+            </p>
+          ) : (
+            <ul className="mt-1 space-y-1">
+              {team.members.map((m) => (
+                <li key={m.id} className="flex items-center justify-between text-sm">
+                  <span>{m.email}</span>
+                  <button
+                    type="button"
+                    onClick={() => call(`/api/team/members/${m.id}`, { method: "DELETE" })}
+                    className="text-xs font-medium text-red-600 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4">
+        {team.role === "owner" ? (
+          <button
+            type="button"
+            onClick={() => call("/api/team", { method: "DELETE" })}
+            disabled={busy}
+            className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+          >
+            Delete team
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => post("/api/team/leave")}
+            disabled={busy}
+            className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+          >
+            Leave team
+          </button>
+        )}
+      </div>
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </Section>
   );
 }

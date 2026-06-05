@@ -63,6 +63,14 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters.").max(200),
 });
 
+export const teamNameSchema = z.object({
+  name: z.string().trim().min(2, "Team name is too short.").max(60, "Team name is too long."),
+});
+
+export const teamJoinSchema = z.object({
+  code: z.string().trim().min(8, "That doesn't look like an invite code.").max(64),
+});
+
 export const voiceNotesSchema = z.object({
   // Empty string clears the notes.
   voiceNotes: z.string().trim().max(2000, "Voice notes are limited to 2,000 characters."),

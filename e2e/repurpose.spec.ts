@@ -118,14 +118,39 @@ test.describe("Repurpose flow", () => {
     await expect(page.getByText(/hit your Free limit/i)).toBeVisible();
   });
 
-  test("integration: real endpoint without API key fails gracefully (no crash)", async ({
+  test("integration: real endpoint streams from the (mock) Anthropic upstream and records history", async ({
     page,
   }) => {
-    // No mock here: hits the real /api/repurpose, which returns 502 (no key configured).
+    // No browser-side mock: the request flows through the real route to the
+    // mock Anthropic server configured in playwright.config.ts.
     await registerNewUser(page);
     await page.getByRole("button", { name: /Load sample/i }).click();
     await page.getByRole("button", { name: /^Repurpose$/ }).click();
-    // The UI shows an error rather than hanging or crashing.
-    await expect(page.locator("p.text-red-600")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/Busyness is a form of laziness/i)).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByText(/4 of 5 repurposes left/i)).toBeVisible();
+
+    // The generation is persisted with its outputs.
+    await page.goto("/dashboard/history");
+    await page
+      .getByRole("button", { name: /^View$/ })
+      .first()
+      .click();
+    await expect(page.getByText(/Busyness is a form of laziness/i).first()).toBeVisible();
+  });
+
+  test("integration: upstream failure surfaces as an error, not a crash", async ({ page }) => {
+    await registerNewUser(page);
+    await page.route("**/api/repurpose", (route) =>
+      route.fulfill({
+        status: 502,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Generation failed." }),
+      }),
+    );
+    await page.getByRole("button", { name: /Load sample/i }).click();
+    await page.getByRole("button", { name: /^Repurpose$/ }).click();
+    await expect(page.locator("p.text-red-600")).toBeVisible();
   });
 });

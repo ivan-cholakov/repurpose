@@ -32,6 +32,13 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
+      // Mock Anthropic Messages API so real generations run (and meter usage).
+      command: "node scripts/mock-anthropic.mjs",
+      url: "http://localhost:4545",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
       command: `PORT=${PORT} pnpm dev`,
       url: baseURL,
       reuseExistingServer: !process.env.CI,
@@ -48,6 +55,9 @@ export default defineConfig({
         STRIPE_PRICE_ID_ANNUAL: "price_dummy_annual_for_e2e",
         // Fixed admin identity for the /admin e2e tests.
         ADMIN_EMAILS: "admin-e2e@example.com",
+        // Generation against the mock Anthropic server above.
+        ANTHROPIC_API_KEY: "mock-key-for-e2e",
+        ANTHROPIC_BASE_URL: "http://localhost:4545",
         // Google sign-in against the mock provider above.
         GOOGLE_CLIENT_ID: "mock-client-id",
         GOOGLE_CLIENT_SECRET: "mock-client-secret",

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { generations, users } from "@/db/schema";
 import { getCurrentUser } from "@/lib/auth";
+import { resolveBillingUser } from "@/lib/billing";
 import { mailConfigured } from "@/lib/mail";
 import { isUsageWindowExpired, planFor } from "@/lib/plans";
 import { type RepurposeStreamEvent, repurpose, repurposeStreaming } from "@/lib/repurpose";
@@ -28,7 +29,9 @@ export async function POST(req: Request) {
   }
   const { source, formats, stream } = parsed.data;
 
-  const plan = planFor(user.plan);
+  // Plan and usage pool on the team owner's account for team members.
+  const billing = await resolveBillingUser(user);
+  const plan = planFor(billing.plan);
 
   if (source.length > plan.maxInputChars) {
     return NextResponse.json(
@@ -40,13 +43,13 @@ export async function POST(req: Request) {
   }
 
   // Reset the metering window if a month has elapsed.
-  let usageCount = user.usageCount;
-  if (isUsageWindowExpired(user.usagePeriodStart)) {
+  let usageCount = billing.usageCount;
+  if (isUsageWindowExpired(billing.usagePeriodStart)) {
     usageCount = 0;
     await db
       .update(users)
       .set({ usageCount: 0, usagePeriodStart: new Date() })
-      .where(eq(users.id, user.id));
+      .where(eq(users.id, billing.id));
   }
 
   if (usageCount >= plan.monthlyLimit) {
@@ -59,15 +62,17 @@ export async function POST(req: Request) {
     );
   }
 
-  // Count one repurpose per request (regardless of how many formats).
-  // (TS can't narrow `user` inside a closure, so capture the id here.)
+  // Count one repurpose per request (regardless of how many formats). Usage
+  // accrues to the billing account; the generation belongs to its author.
+  // (TS can't narrow `user` inside a closure, so capture the ids here.)
   const userId = user.id;
+  const billingId = billing.id;
   async function persist(results: Awaited<ReturnType<typeof repurpose>>) {
     await db.batch([
       db
         .update(users)
         .set({ usageCount: sql`${users.usageCount} + 1` })
-        .where(eq(users.id, userId)),
+        .where(eq(users.id, billingId)),
       db.insert(generations).values({
         userId,
         formats: formats.join(","),
