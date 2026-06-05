@@ -21,6 +21,16 @@ export const FORMATS = {
     instruction:
       "A tight TL;DR: one-sentence summary followed by 3-5 crisp bullet points of the key takeaways.",
   },
+  instagram: {
+    label: "Instagram caption",
+    instruction:
+      "An Instagram caption (~100-150 words): a scroll-stopping first line, short evocative paragraphs, a clear call-to-action, and 3-5 relevant hashtags on the final line.",
+  },
+  youtube: {
+    label: "YouTube description",
+    instruction:
+      "A YouTube video description: a 1-2 sentence hook summarizing the value, a short overview paragraph, a bulleted list of key points as chapter-style highlights, and a closing call-to-action to like/subscribe. No timestamps (the video doesn't exist yet).",
+  },
 } as const;
 
 export type FormatId = keyof typeof FORMATS;

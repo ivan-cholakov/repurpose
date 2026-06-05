@@ -34,6 +34,37 @@ test.describe("Repurpose flow", () => {
     await expect(page.getByText(/Copied!/i).first()).toBeVisible();
   });
 
+  test("all six format options render and can be selected for generation", async ({ page }) => {
+    await registerNewUser(page);
+    await mockRepurposeSuccess(page, [
+      { format: "instagram", label: "Instagram caption", content: "Mocked IG caption. #mock" },
+      { format: "youtube", label: "YouTube description", content: "Mocked YouTube description." },
+    ]);
+
+    // Every format chip is present.
+    for (const label of [
+      "X / Twitter thread",
+      "LinkedIn post",
+      "Newsletter blurb",
+      "TL;DR summary",
+      "Instagram caption",
+      "YouTube description",
+    ]) {
+      await expect(page.getByRole("button", { name: label })).toBeVisible();
+    }
+
+    // Switch selection to the two new formats and generate.
+    await page.getByRole("button", { name: "X / Twitter thread" }).click();
+    await page.getByRole("button", { name: "LinkedIn post" }).click();
+    await page.getByRole("button", { name: "Instagram caption" }).click();
+    await page.getByRole("button", { name: "YouTube description" }).click();
+    await page.getByRole("button", { name: /Load sample/i }).click();
+    await page.getByRole("button", { name: /^Repurpose$/ }).click();
+
+    await expect(page.getByText("Mocked IG caption. #mock")).toBeVisible();
+    await expect(page.getByText("Mocked YouTube description.")).toBeVisible();
+  });
+
   test("edge: too-short source is rejected client-side", async ({ page }) => {
     await registerNewUser(page);
     await page.locator("#source-content").fill("too short");
